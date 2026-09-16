@@ -1,0 +1,214 @@
+:root {
+  --bg: #0c0e12;
+  --panel: #14171c;
+  --card: #1b1f26;
+  --border: rgba(255, 255, 255, 0.1);
+  --border-soft: rgba(255, 255, 255, 0.08);
+  --text: #eef1f4;
+  --text-dim: #a8b1bb;
+  --text-dimmer: #9aa3ae;
+  --text-faint: #8b949f;
+  --text-faintest: #7d868f;
+  --orange: #e8712e;
+  --orange-hover: #f59356;
+  --green: #5ac2a0;
+  --gold: #e8a02e;
+  --placeholder: repeating-linear-gradient(135deg, #262c35 0 8px, #212730 8px 16px);
+  --placeholder-hero: repeating-linear-gradient(135deg, #232a33 0 10px, #1d232b 10px 20px);
+  --avatar: repeating-linear-gradient(135deg, #2b323c 0 4px, #242b34 4px 8px);
+  --font-display: "Oswald", sans-serif;
+  --font-body: "Work Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--orange);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--orange-hover);
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input,
+textarea {
+  font-family: inherit;
+}
+
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -320px 0;
+  }
+  100% {
+    background-position: 320px 0;
+  }
+}
+
+.mono-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: var(--text-faint);
+  text-transform: uppercase;
+}
+
+.heading {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 15px 26px;
+  border: none;
+  font-weight: 500;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-primary {
+  background: var(--orange);
+  color: #12151a;
+}
+
+.btn-primary:hover {
+  background: var(--orange-hover);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-outline {
+  background: transparent;
+  color: #e3e8ed;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.btn-outline:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.btn-success {
+  background: var(--green);
+  color: #10221c;
+}
+
+.placeholder-box {
+  background: var(--placeholder);
+  display: flex;
+  align-items: flex-end;
+  padding: 12px;
+}
+
+.placeholder-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--text-faint);
+}
+
+.tier-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(90, 194, 160, 0.16);
+  color: var(--green);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  padding: 2px 6px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.stars {
+  color: var(--gold);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border-soft);
+}
+
+.tag-pill {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  padding: 3px 7px;
+  color: #c3cad2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.field-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--text-faint);
+  text-transform: uppercase;
+}
+
+.text-input {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: var(--card);
+  padding: 14px;
+  font-size: 15px;
+  color: var(--text);
+  width: 100%;
+}
+
+.text-input:focus {
+  outline: none;
+  border-color: var(--orange);
+}
+
+.error-text {
+  font-size: 13px;
+  color: #f18a6a;
+}
+
+.spinner-shimmer {
+  background: linear-gradient(90deg, #232a33 0%, #2c343e 50%, #232a33 100%);
+  background-size: 320px 100%;
+  animation: shimmer 1.4s linear infinite;
+}
