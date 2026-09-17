@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import Avatar from "./Avatar";
 
 export default function TopBar({ hasUnread = false }: { hasUnread?: boolean }) {
   const { user, logout } = useAuth();
@@ -57,20 +58,9 @@ export default function TopBar({ hasUnread = false }: { hasUnread?: boolean }) {
             />
           )}
         </span>
-        <span
-          role="link"
-          tabIndex={0}
-          title={user?.name}
-          onClick={() => navigate("/profile/me")}
-          style={{
-            width: 26,
-            height: 26,
-            borderRadius: "50%",
-            background: user?.avatarUrl ? `url(${user.avatarUrl}) center/cover` : "var(--avatar)",
-            border: "1px solid rgba(255,255,255,0.18)",
-            cursor: "pointer",
-          }}
-        />
+        <span role="link" tabIndex={0} title={user?.name} onClick={() => navigate("/profile/me")} style={{ cursor: "pointer", display: "flex" }}>
+          <Avatar src={user?.avatarUrl} size={26} alt={user?.name} style={{ border: "1px solid rgba(255,255,255,0.18)" }} />
+        </span>
         <span
           role="link"
           tabIndex={0}

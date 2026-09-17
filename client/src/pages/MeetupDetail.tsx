@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import Placeholder from "../components/Placeholder";
+import Avatar from "../components/Avatar";
 import type { Meetup } from "../types";
 
 export default function MeetupDetail() {
@@ -34,8 +35,13 @@ export default function MeetupDetail() {
   }
 
   async function openGroupChat() {
-    const { data } = await api.post(`/conversations/meetup/${id}`);
-    navigate(`/chat/${data.conversation.id}`);
+    setError(null);
+    try {
+      const { data } = await api.post(`/conversations/meetup/${id}`);
+      navigate(`/chat/${data.conversation.id}`);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || "Could not open the group chat.");
+    }
   }
 
   return (
@@ -64,7 +70,7 @@ export default function MeetupDetail() {
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 10 }}>
             {meetup.attendees.slice(0, 3).map((a) => (
               <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ width: 32, height: 32, borderRadius: "50%", background: a.avatarUrl ? `url(${a.avatarUrl}) center/cover` : "var(--avatar)" }} />
+                <Avatar src={a.avatarUrl} size={32} alt={a.name} />
                 <span style={{ flex: 1, fontSize: 14 }}>
                   {a.name}{" "}
                   <span className="mono-label" style={{ color: a.id === meetup.host.id ? "var(--green)" : "var(--text-dimmer)" }}>

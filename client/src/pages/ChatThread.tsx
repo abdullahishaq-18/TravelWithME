@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/client";
 import { socket } from "../api/socket";
 import { useAuth } from "../context/AuthContext";
+import Avatar from "../components/Avatar";
 import type { Conversation, Message } from "../types";
 
 export default function ChatThread() {
@@ -13,6 +14,7 @@ export default function ChatThread() {
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -27,11 +29,20 @@ export default function ChatThread() {
     const handler = (message: Message) => {
       if (message.conversation === id) setMessages((prev) => [...prev, message]);
     };
+    const connectErrorHandler = () => setError("Live updates unavailable — reconnecting…");
+    const connectHandler = () => {
+      setError(null);
+      socket.emit("conversation:join", id);
+    };
     socket.on("message:new", handler);
+    socket.on("connect_error", connectErrorHandler);
+    socket.on("connect", connectHandler);
 
     return () => {
       socket.emit("conversation:leave", id);
       socket.off("message:new", handler);
+      socket.off("connect_error", connectErrorHandler);
+      socket.off("connect", connectHandler);
     };
   }, [id]);
 
@@ -44,7 +55,13 @@ export default function ChatThread() {
     if (!text.trim() || !id) return;
     const body = text;
     setText("");
-    await api.post(`/conversations/${id}/messages`, { text: body });
+    setError(null);
+    try {
+      await api.post(`/conversations/${id}/messages`, { text: body });
+    } catch (err: any) {
+      setText(body);
+      setError(err?.response?.data?.message || "Message failed to send.");
+    }
   }
 
   const title = conversation?.isGroup ? "Group chat" : conversation?.other?.name || "Traveler";
@@ -54,7 +71,7 @@ export default function ChatThread() {
     <div style={{ maxWidth: 520, margin: "0 auto", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <div style={{ padding: "14px 16px", display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid var(--border)" }}>
         <span style={{ color: "var(--text-dim)", fontSize: 15, cursor: "pointer" }} onClick={() => navigate("/chat")}>←</span>
-        <span style={{ width: 32, height: 32, borderRadius: "50%", background: other?.avatarUrl ? `url(${other.avatarUrl}) center/cover` : "var(--avatar)" }} />
+        <Avatar src={other?.avatarUrl} size={32} alt={title} />
         <div style={{ flex: 1 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <span style={{ fontSize: 15, fontWeight: 500 }}>{title}</span>
@@ -91,6 +108,7 @@ export default function ChatThread() {
         <div ref={bottomRef} />
       </div>
 
+      {error && <div className="error-text" style={{ padding: "0 16px" }}>{error}</div>}
       <form onSubmit={handleSend} style={{ padding: "12px 14px", borderTop: "1px solid var(--border)", display: "flex", gap: 10, alignItems: "center" }}>
         <input
           className="text-input"

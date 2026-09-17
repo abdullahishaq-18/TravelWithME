@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../api/client";
+import EmptyState from "../components/EmptyState";
 import type { Notification } from "../types";
 
 const ICONS: Record<Notification["type"], { icon: string; color: string; bg: string }> = {
@@ -40,9 +41,7 @@ export default function Notifications() {
       {read.map((n) => (
         <NotificationRow key={n._id} n={n} />
       ))}
-      {notifications?.length === 0 && (
-        <div className="mono-label" style={{ textAlign: "center", padding: "40px 0" }}>You're all caught up</div>
-      )}
+      {notifications?.length === 0 && <EmptyState message="You're all caught up" />}
       <div style={{ padding: "20px 18px", fontSize: 12, color: "var(--text-faintest)", lineHeight: 1.6 }}>
         You only receive messages from travelers whose ID has cleared. Adjust this in Settings → Safety.
       </div>

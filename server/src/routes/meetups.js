@@ -84,6 +84,9 @@ router.post("/:id/join", requireAuth, async (req, res) => {
 router.get("/:id/rating-queue", requireAuth, async (req, res) => {
   const meetup = await Meetup.findById(req.params.id).populate("attendees");
   if (!meetup) return res.status(404).json({ message: "Meetup not found" });
+  if (!meetup.attendees.some((a) => a._id.toString() === req.userId)) {
+    return res.status(403).json({ message: "Only attendees can rate this meetup" });
+  }
 
   const already = await Rating.find({ meetup: meetup._id, rater: req.userId }).select("ratee");
   const ratedIds = new Set(already.map((r) => r.ratee.toString()));
@@ -98,9 +101,21 @@ router.get("/:id/rating-queue", requireAuth, async (req, res) => {
 router.post("/:id/ratings", requireAuth, async (req, res) => {
   const { rateeId, stars, tags } = req.body;
   if (!rateeId || !stars) return res.status(400).json({ message: "rateeId and stars are required" });
+  if (!Number.isInteger(stars) || stars < 1 || stars > 5) {
+    return res.status(400).json({ message: "stars must be an integer between 1 and 5" });
+  }
+  if (rateeId === req.userId) {
+    return res.status(400).json({ message: "You can't rate yourself" });
+  }
 
   const meetup = await Meetup.findById(req.params.id);
   if (!meetup) return res.status(404).json({ message: "Meetup not found" });
+  if (!meetup.attendees.some((a) => a.toString() === req.userId)) {
+    return res.status(403).json({ message: "Only attendees can rate this meetup" });
+  }
+  if (!meetup.attendees.some((a) => a.toString() === rateeId)) {
+    return res.status(400).json({ message: "rateeId did not attend this meetup" });
+  }
 
   try {
     await Rating.create({ meetup: meetup._id, rater: req.userId, ratee: rateeId, stars, tags: tags || [] });

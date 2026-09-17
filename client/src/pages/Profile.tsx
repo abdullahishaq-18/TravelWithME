@@ -11,6 +11,7 @@ export default function Profile() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<User | null>(null);
   const [sharedMeetups, setSharedMeetups] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   const isSelf = id === "me" || id === me?.id;
 
   useEffect(() => {
@@ -34,13 +35,18 @@ export default function Profile() {
 
   async function messageUser() {
     if (!profile) return;
-    const { data } = await api.post("/conversations/direct", { userId: profile.id });
-    navigate(`/chat/${data.conversation.id}`);
+    setError(null);
+    try {
+      const { data } = await api.post("/conversations/direct", { userId: profile.id });
+      navigate(`/chat/${data.conversation.id}`);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || "Could not start a conversation.");
+    }
   }
 
   return (
     <div style={{ maxWidth: 520, margin: "0 auto", minHeight: "100vh", background: "var(--panel)" }}>
-      <Placeholder label="[ PROFILE PHOTO ]" photoUrl={profile.avatarUrl} height={220} />
+      <Placeholder label="[ PROFILE PHOTO ]" photoUrl={profile.avatarUrl} kind="avatar" height={220} />
       <div style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
@@ -103,6 +109,7 @@ export default function Profile() {
           </div>
         )}
 
+        {error && <div className="error-text">{error}</div>}
         {!isSelf && (
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
             <button className="btn btn-primary" style={{ flex: 2 }} onClick={messageUser}>Message {profile.name.split(" ")[0]}</button>

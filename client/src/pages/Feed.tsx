@@ -4,6 +4,8 @@ import api from "../api/client";
 import TopBar from "../components/TopBar";
 import Placeholder from "../components/Placeholder";
 import TierBadge from "../components/TierBadge";
+import Avatar from "../components/Avatar";
+import EmptyState from "../components/EmptyState";
 import type { FeedItem } from "../types";
 
 const TABS = [
@@ -17,6 +19,8 @@ export default function Feed() {
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("all");
   const [items, setItems] = useState<FeedItem[] | null>(null);
   const [hasUnread, setHasUnread] = useState(false);
+  const [joinErrors, setJoinErrors] = useState<Record<string, string>>({});
+  const [actionError, setActionError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,21 +41,34 @@ export default function Feed() {
   }, []);
 
   async function messageUser(userId: string) {
-    const { data } = await api.post("/conversations/direct", { userId });
-    navigate(`/chat/${data.conversation.id}`);
+    setActionError(null);
+    try {
+      const { data } = await api.post("/conversations/direct", { userId });
+      navigate(`/chat/${data.conversation.id}`);
+    } catch (err: any) {
+      setActionError(err?.response?.data?.message || "Could not start a conversation.");
+    }
   }
 
   async function joinMeetup(meetupId: string) {
-    await api.post(`/meetups/${meetupId}/join`);
-    setItems((prev) =>
-      prev
-        ? prev.map((item) =>
-            item.kind === "meetup" && item.id === meetupId
-              ? { ...item, joined: true, attendeeCount: item.attendeeCount + 1 }
-              : item
-          )
-        : prev
-    );
+    setJoinErrors((prev) => ({ ...prev, [meetupId]: "" }));
+    try {
+      await api.post(`/meetups/${meetupId}/join`);
+      setItems((prev) =>
+        prev
+          ? prev.map((item) =>
+              item.kind === "meetup" && item.id === meetupId
+                ? { ...item, joined: true, attendeeCount: item.attendeeCount + 1 }
+                : item
+            )
+          : prev
+      );
+    } catch (err: any) {
+      setJoinErrors((prev) => ({
+        ...prev,
+        [meetupId]: err?.response?.data?.message || "Could not join this meetup.",
+      }));
+    }
   }
 
   return (
@@ -77,23 +94,15 @@ export default function Feed() {
       </div>
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "12px 14px 30px" }}>
+        {actionError && <div className="error-text">{actionError}</div>}
         {items === null && <SkeletonCard />}
-        {items?.length === 0 && (
-          <div className="mono-label" style={{ textAlign: "center", padding: "40px 0" }}>Nothing here yet</div>
-        )}
+        {items?.length === 0 && <EmptyState message="Nothing here yet" />}
         {items?.map((item) => {
           if (item.kind === "post") {
             return (
               <div key={item.id} className="card">
                 <div style={{ display: "flex", alignItems: "center", gap: 10, padding: 12 }}>
-                  <div
-                    style={{
-                      width: 34,
-                      height: 34,
-                      borderRadius: "50%",
-                      background: item.author.avatarUrl ? `url(${item.author.avatarUrl}) center/cover` : "var(--avatar)",
-                    }}
-                  />
+                  <Avatar src={item.author.avatarUrl} size={34} alt={item.author.name} />
                   <div style={{ flex: 1 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                       <span style={{ fontSize: 14, fontWeight: 500 }}>{item.author.name}</span>
@@ -121,7 +130,7 @@ export default function Feed() {
               <div key={item.id} className="card" style={{ borderLeft: "3px solid var(--orange)" }}>
                 <div className="mono-label" style={{ padding: "10px 12px 0", color: "var(--orange)" }}>Nearby traveler</div>
                 <div style={{ display: "flex", gap: 12, padding: 12 }}>
-                  <Placeholder label="[ AVATAR ]" photoUrl={item.user.avatarUrl} style={{ width: 96, height: 120, flexShrink: 0 }} height={120} />
+                  <Placeholder label="[ AVATAR ]" photoUrl={item.user.avatarUrl} kind="avatar" style={{ width: 96, height: 120, flexShrink: 0 }} height={120} />
                   <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 7 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                       <span className="heading" style={{ fontSize: 19 }}>{item.user.name}</span>
@@ -172,6 +181,7 @@ export default function Feed() {
                   </button>
                   <button className="btn btn-outline" style={{ flex: 1, padding: 10, fontSize: 10 }} onClick={() => navigate(`/meetups/${item.id}`)}>Details</button>
                 </div>
+                {joinErrors[item.id] && <div className="error-text" style={{ marginTop: 8 }}>{joinErrors[item.id]}</div>}
               </div>
             </div>
           );

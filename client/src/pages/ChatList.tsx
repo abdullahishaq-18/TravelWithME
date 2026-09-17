@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/client";
 import TopBar from "../components/TopBar";
+import Avatar from "../components/Avatar";
+import EmptyState from "../components/EmptyState";
 import type { Conversation } from "../types";
 
 export default function ChatList() {
@@ -16,9 +18,7 @@ export default function ChatList() {
     <div style={{ maxWidth: 520, margin: "0 auto", minHeight: "100vh" }}>
       <TopBar />
       <div className="heading" style={{ fontSize: 22, padding: 18 }}>Messages</div>
-      {conversations?.length === 0 && (
-        <div className="mono-label" style={{ textAlign: "center", padding: "40px 0" }}>No conversations yet</div>
-      )}
+      {conversations?.length === 0 && <EmptyState message="No conversations yet" />}
       {conversations?.map((c) => {
         const title = c.isGroup ? "Group chat" : c.other?.name || "Traveler";
         const avatarUrl = c.isGroup ? null : c.other?.avatarUrl;
@@ -28,7 +28,7 @@ export default function ChatList() {
             onClick={() => navigate(`/chat/${c.id}`)}
             style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 18px", borderBottom: "1px solid var(--border-soft)", cursor: "pointer" }}
           >
-            <span style={{ width: 40, height: 40, borderRadius: "50%", background: avatarUrl ? `url(${avatarUrl}) center/cover` : "var(--avatar)", flexShrink: 0 }} />
+            <Avatar src={avatarUrl} size={40} alt={title} />
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 15, fontWeight: 500 }}>{title}</div>
               <div className="mono-label" style={{ fontSize: 10, marginTop: 3 }}>

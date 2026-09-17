@@ -63,9 +63,20 @@ export default function Landing() {
         </div>
       </div>
 
-      <div style={{ position: "relative", minHeight: 620, background: "var(--placeholder-hero)", paddingTop: 64, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+      <div
+        style={{
+          position: "relative",
+          minHeight: 620,
+          backgroundImage: "url(/images/landing/hero-bg.jpeg)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          paddingTop: 64,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "flex-end",
+        }}
+      >
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg,rgba(12,14,18,0.35) 0%,rgba(12,14,18,0.15) 40%,rgba(12,14,18,0.92) 100%)" }} />
-        <div className="mono-label" style={{ position: "absolute", top: 26, left: 44 }}>[ HERO PHOTO — TRAVELERS MEETING, WIDE LANDSCAPE ]</div>
         <div style={{ position: "relative", padding: "0 44px" }}>
           <div className="heading" style={{ fontSize: "clamp(40px, 7vw, 104px)", lineHeight: 0.94, fontWeight: 700, maxWidth: 760 }}>
             Travel alone.<br />Never arrive<br />a stranger.

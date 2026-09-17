@@ -4,6 +4,10 @@ const Message = require("../models/Message");
 const Meetup = require("../models/Meetup");
 const requireAuth = require("../middleware/auth");
 
+function isParticipant(conversation, userId) {
+  return conversation.participants.some((p) => (p._id || p).toString() === userId);
+}
+
 function serializeConversation(conversation, userId) {
   const other = conversation.isGroup
     ? null
@@ -71,6 +75,12 @@ module.exports = function createMessagesRouter(io) {
   });
 
   router.get("/:id/messages", requireAuth, async (req, res) => {
+    const conversation = await Conversation.findById(req.params.id);
+    if (!conversation) return res.status(404).json({ message: "Conversation not found" });
+    if (!isParticipant(conversation, req.userId)) {
+      return res.status(403).json({ message: "You are not part of this conversation" });
+    }
+
     const messages = await Message.find({ conversation: req.params.id })
       .populate("sender")
       .populate("sharedMeetup")
@@ -93,6 +103,9 @@ module.exports = function createMessagesRouter(io) {
 
     const conversation = await Conversation.findById(req.params.id);
     if (!conversation) return res.status(404).json({ message: "Conversation not found" });
+    if (!isParticipant(conversation, req.userId)) {
+      return res.status(403).json({ message: "You are not part of this conversation" });
+    }
 
     const message = await Message.create({ conversation: conversation._id, sender: req.userId, text });
     conversation.lastMessageAt = message.createdAt;

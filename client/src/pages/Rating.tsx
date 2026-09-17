@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/client";
 import StarRating from "../components/StarRating";
+import Avatar from "../components/Avatar";
 import type { User } from "../types";
 
 const STAR_LABELS: Record<number, string> = {
@@ -24,6 +25,7 @@ export default function Rating() {
   const [stars, setStars] = useState(4);
   const [tags, setTags] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     api.get(`/meetups/${id}/rating-queue`).then(({ data }) => {
@@ -54,11 +56,14 @@ export default function Rating() {
 
   async function submit() {
     setSubmitting(true);
+    setError(null);
     try {
       await api.post(`/meetups/${id}/ratings`, { rateeId: current.id, stars, tags });
       setIndex((i) => i + 1);
       setStars(4);
       setTags([]);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || "Could not submit this rating.");
     } finally {
       setSubmitting(false);
     }
@@ -76,7 +81,7 @@ export default function Rating() {
           <div className="heading" style={{ fontSize: 30, lineHeight: 1.05, marginTop: 10 }}>How was<br />meeting {current.name.split(" ")[0]}?</div>
         </div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <span style={{ width: 44, height: 44, borderRadius: "50%", background: current.avatarUrl ? `url(${current.avatarUrl}) center/cover` : "var(--avatar)" }} />
+          <Avatar src={current.avatarUrl} size={44} alt={current.name} />
           <div>
             <div style={{ fontSize: 15, fontWeight: 500 }}>{current.name}</div>
             <div className="mono-label" style={{ color: "var(--green)", fontSize: 9 }}>✓ TIER {current.tier}</div>
@@ -118,6 +123,7 @@ export default function Rating() {
           </div>
         </div>
         <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 10 }}>
+          {error && <div className="error-text">{error}</div>}
           <button className="btn btn-primary" disabled={submitting} onClick={submit}>
             {index === queue.length - 1 ? "Submit →" : "Submit & rate next →"}
           </button>
