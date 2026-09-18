@@ -92,8 +92,20 @@ cp .env.example .env    # VITE_API_URL=http://localhost:5000/api (default is alr
 npm run dev
 ```
 
+`VITE_API_URL` can be set to either the bare backend origin (`https://api.example.com`) or the
+full path including `/api` (`https://api.example.com/api`) — the client normalizes it to always
+end in exactly one `/api` segment, so either form works.
+
 Client runs on `http://localhost:5173`. Open it in a browser and log in with the demo account, or
 sign up fresh to walk through the tier 1→2→3 verification flow.
+
+## Live deployment
+
+- Frontend: https://travelwithme-1-ficm.onrender.com
+- Backend: https://travelwithme-abr8.onrender.com
+
+Both are hosted on Render, redeploying automatically on every push to `main`. See **Deployment
+gotchas** below before changing environment variables on either service.
 
 ## Data model
 
@@ -117,8 +129,8 @@ All routes except `/api/auth/signup` and `/api/auth/login` require `Authorizatio
 | `GET/PATCH /api/users/me`, `POST /api/users/me/verify` | Profile + tier upgrades (`{tier: 2, phone}` or `{tier: 3}`) |
 | `GET /api/users/:id` | Public profile + shared-meetup count |
 | `GET /api/feed?type=all\|posts\|travelers\|meetups` | Mixed, time-sorted feed |
-| `POST /api/posts` | Create a post |
-| `POST /api/meetups`, `GET /api/meetups/:id`, `POST /api/meetups/:id/join` | Meetup CRUD/RSVP; join is blocked below `minTier` or at capacity |
+| `POST /api/posts` | Create a post (feed has a composer wired to this) |
+| `POST /api/meetups`, `GET /api/meetups/:id`, `POST /api/meetups/:id/join`, `POST /api/meetups/:id/leave` | Meetup CRUD/RSVP; join is blocked below `minTier` or at capacity; leave is blocked for the host |
 | `GET /api/meetups/:id/rating-queue`, `POST /api/meetups/:id/ratings` | Post-meetup rating; restricted to attendees, blocks self-rating and rating non-attendees |
 | `GET /api/conversations`, `POST /api/conversations/direct`, `POST /api/conversations/meetup/:meetupId` | List/start conversations |
 | `GET/POST /api/conversations/:id/messages` | Read/send messages; restricted to conversation participants |
@@ -146,24 +158,55 @@ receive new messages via a `message:new` event, broadcast by the server whenever
   a group chat, submit a rating) surfaces the server's actual error message inline, not just to the
   console. A global `401` response anywhere in the app clears the session and redirects to `/login`.
 
+## Deployment gotchas
+
+Two real production incidents worth knowing before touching environment variables on either
+Render service:
+
+1. **`MONGO_URI` must include the database name explicitly** (`.../travelwithme?...`). A
+   connection string copied straight from Atlas's "Connect" dialog looks like
+   `.../cluster0.xxxxx.mongodb.net/?retryWrites=...` — no database name. The Mongo driver silently
+   defaults to a database literally named `test` in that case: the app runs fine, auth works fine,
+   but the feed comes back empty because it's reading from a different, unseeded database than the
+   one `npm run seed` was run against. There's no error or warning when this happens — just missing
+   data.
+2. **The CORS origin env var is `CLIENT_URL`**, read in `server/src/index.js`. If it's unset, the
+   server silently falls back to `http://localhost:5173`, which is exactly what a browser's CORS
+   error will show as the (wrong) `Access-Control-Allow-Origin` value. Also remember: setting the
+   variable alone isn't enough — the *code that reads it* has to actually be deployed. Check
+   `git log -1` against the live commit if a fix doesn't seem to take effect after redeploying.
+
 ## Verification status
 
 This app has been checked end-to-end against a live MongoDB Atlas cluster: bcrypt password
 hashing, JWT issuance/expiry/rejection, duplicate-signup and login-error handling, per-write
 persistence (post/meetup/join/message/rating all confirmed via direct database reads, not just API
 responses), tier-gated join enforcement, input validation, authorization (no cross-conversation or
-non-attendee access), and real-time Socket.IO delivery including disconnect/reconnect — all
-passing as of the last verification pass.
+non-attendee access), and real-time Socket.IO delivery including disconnect/reconnect.
+
+It has also been debugged directly against the live Render deployment (not just locally): feed
+population, signup persistence, CORS configuration, static image serving, and the nav/footer/social
+button fixes were all confirmed live via direct HTTP requests and database queries, not assumed
+from local behavior alone.
 
 ## Known limitations
 
 - No password reset / email verification flow (email "tier 1" is granted at signup without an
   actual confirmation email).
-- No file upload — `photoUrl`/`avatarUrl` are plain string fields; the seed data points them at
-  static files in `client/public/images/`.
+- No file upload — `photoUrl`/`avatarUrl` are plain string fields (the create-post composer takes
+  a photo URL, not a file); the seed data points them at static files in `client/public/images/`.
 - No automated test suite (Jest/Vitest) — verification so far has been manual/scripted against a
   live database rather than a checked-in test suite.
 - `react` and `react-dom` are installed in `client/` only as a transitive peer dependency of
   `react-router-dom` (not declared directly in `client/package.json`). This works with npm's
   default peer-auto-install behavior but would be worth declaring explicitly for robustness with
   other package managers.
+- Social login ("Continue with Apple"/"Continue with Google" on signup) is out of scope — the
+  buttons are present but disabled, not wired to real OAuth.
+- The landing page's "Safety", "Support" nav links and all three footer links (Safety centre,
+  Report a user, Privacy) have no page to point to yet, so they're rendered visually dimmed
+  ("Coming soon") rather than as dead links. "Home", "How trust works", and "Meetups" do work —
+  the latter two scroll to their sections on the same page.
+- Messaging has no entry point from a meetup's attendee list on the meetup detail page — only from
+  feed cards and the profile page. The underlying API has no such restriction; it's just not wired
+  in that one spot.
