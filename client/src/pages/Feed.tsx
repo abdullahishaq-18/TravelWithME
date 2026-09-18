@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/client";
 import TopBar from "../components/TopBar";
@@ -6,6 +7,7 @@ import Placeholder from "../components/Placeholder";
 import TierBadge from "../components/TierBadge";
 import Avatar from "../components/Avatar";
 import EmptyState from "../components/EmptyState";
+import { useAuth } from "../context/AuthContext";
 import type { FeedItem } from "../types";
 
 const TABS = [
@@ -16,11 +18,17 @@ const TABS = [
 ] as const;
 
 export default function Feed() {
+  const { user: me } = useAuth();
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("all");
   const [items, setItems] = useState<FeedItem[] | null>(null);
   const [hasUnread, setHasUnread] = useState(false);
   const [joinErrors, setJoinErrors] = useState<Record<string, string>>({});
   const [actionError, setActionError] = useState<string | null>(null);
+  const [composerCaption, setComposerCaption] = useState("");
+  const [composerPhotoUrl, setComposerPhotoUrl] = useState("");
+  const [composerLocation, setComposerLocation] = useState("");
+  const [posting, setPosting] = useState(false);
+  const [composerError, setComposerError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -71,6 +79,51 @@ export default function Feed() {
     }
   }
 
+  async function submitPost(e: FormEvent) {
+    e.preventDefault();
+    if (!composerCaption.trim()) return;
+    setPosting(true);
+    setComposerError(null);
+    try {
+      const { data } = await api.post("/posts", {
+        caption: composerCaption.trim(),
+        photoUrl: composerPhotoUrl.trim() || undefined,
+        location: composerLocation.trim(),
+      });
+      setComposerCaption("");
+      setComposerPhotoUrl("");
+      setComposerLocation("");
+      if (tab === "all" || tab === "posts") {
+        setItems((prev) => (prev ? [{ kind: "post", ...data.post }, ...prev] : prev));
+      }
+    } catch (err: any) {
+      setComposerError(err?.response?.data?.message || "Could not create this post.");
+    } finally {
+      setPosting(false);
+    }
+  }
+
+  async function leaveMeetup(meetupId: string) {
+    setJoinErrors((prev) => ({ ...prev, [meetupId]: "" }));
+    try {
+      await api.post(`/meetups/${meetupId}/leave`);
+      setItems((prev) =>
+        prev
+          ? prev.map((item) =>
+              item.kind === "meetup" && item.id === meetupId
+                ? { ...item, joined: false, attendeeCount: Math.max(0, item.attendeeCount - 1) }
+                : item
+            )
+          : prev
+      );
+    } catch (err: any) {
+      setJoinErrors((prev) => ({
+        ...prev,
+        [meetupId]: err?.response?.data?.message || "Could not leave this meetup.",
+      }));
+    }
+  }
+
   return (
     <div style={{ maxWidth: 640, margin: "0 auto", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <TopBar hasUnread={hasUnread} />
@@ -94,6 +147,36 @@ export default function Feed() {
       </div>
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "12px 14px 30px" }}>
+        <form onSubmit={submitPost} className="card" style={{ padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+          <textarea
+            className="text-input"
+            placeholder="Share something with nearby travelers…"
+            value={composerCaption}
+            onChange={(e) => setComposerCaption(e.target.value)}
+            rows={2}
+            style={{ resize: "vertical" }}
+          />
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <input
+              className="text-input"
+              style={{ flex: "2 1 200px" }}
+              placeholder="Photo URL (optional)"
+              value={composerPhotoUrl}
+              onChange={(e) => setComposerPhotoUrl(e.target.value)}
+            />
+            <input
+              className="text-input"
+              style={{ flex: "1 1 120px" }}
+              placeholder="Location (optional)"
+              value={composerLocation}
+              onChange={(e) => setComposerLocation(e.target.value)}
+            />
+            <button type="submit" className="btn btn-primary" disabled={posting || !composerCaption.trim()} style={{ flex: "0 0 auto" }}>
+              {posting ? "Posting…" : "Post"}
+            </button>
+          </div>
+          {composerError && <div className="error-text">{composerError}</div>}
+        </form>
         {actionError && <div className="error-text">{actionError}</div>}
         {items === null && <SkeletonCard />}
         {items?.length === 0 && <EmptyState message="Nothing here yet" />}
@@ -171,14 +254,19 @@ export default function Feed() {
                   <span style={{ fontSize: 12, color: "var(--text-dimmer)" }}>Hosted by {item.host.name} · Tier {item.minTier}+</span>
                 </div>
                 <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                  <button
-                    className={item.joined ? "btn btn-outline" : "btn btn-success"}
-                    style={{ flex: 1, padding: 10, fontSize: 10 }}
-                    disabled={item.joined}
-                    onClick={() => joinMeetup(item.id)}
-                  >
-                    {item.joined ? "Joined" : "Join meetup"}
-                  </button>
+                  {item.host.id === me?.id ? (
+                    <button className="btn btn-outline" style={{ flex: 1, padding: 10, fontSize: 10 }} disabled>
+                      Hosting
+                    </button>
+                  ) : item.joined ? (
+                    <button className="btn btn-outline" style={{ flex: 1, padding: 10, fontSize: 10 }} onClick={() => leaveMeetup(item.id)}>
+                      Leave
+                    </button>
+                  ) : (
+                    <button className="btn btn-success" style={{ flex: 1, padding: 10, fontSize: 10 }} onClick={() => joinMeetup(item.id)}>
+                      Join meetup
+                    </button>
+                  )}
                   <button className="btn btn-outline" style={{ flex: 1, padding: 10, fontSize: 10 }} onClick={() => navigate(`/meetups/${item.id}`)}>Details</button>
                 </div>
                 {joinErrors[item.id] && <div className="error-text" style={{ marginTop: 8 }}>{joinErrors[item.id]}</div>}

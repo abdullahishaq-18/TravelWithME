@@ -34,6 +34,16 @@ export default function MeetupDetail() {
     }
   }
 
+  async function handleLeave() {
+    setError(null);
+    try {
+      const { data } = await api.post(`/meetups/${id}/leave`);
+      setMeetup(data.meetup);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || "Could not leave this meetup.");
+    }
+  }
+
   async function openGroupChat() {
     setError(null);
     try {
@@ -87,9 +97,19 @@ export default function MeetupDetail() {
         </div>
         {error && <div className="error-text">{error}</div>}
         <div style={{ display: "flex", gap: 8, marginTop: "auto" }}>
-          <button className="btn btn-success" style={{ flex: 2 }} disabled={meetup.joined} onClick={handleRsvp}>
-            {meetup.joined ? "You're going" : "RSVP — I'm going"}
-          </button>
+          {meetup.host.id === me?.id ? (
+            <button className="btn btn-success" style={{ flex: 2 }} disabled>
+              You're hosting
+            </button>
+          ) : meetup.joined ? (
+            <button className="btn btn-outline" style={{ flex: 2 }} onClick={handleLeave}>
+              Leave meetup
+            </button>
+          ) : (
+            <button className="btn btn-success" style={{ flex: 2 }} onClick={handleRsvp}>
+              RSVP — I'm going
+            </button>
+          )}
           <button className="btn btn-outline" style={{ flex: 1 }} onClick={openGroupChat} disabled={!meetup.joined}>
             Group chat
           </button>

@@ -80,6 +80,21 @@ router.post("/:id/join", requireAuth, async (req, res) => {
   res.json({ meetup: serializeMeetup(populated, req.userId) });
 });
 
+router.post("/:id/leave", requireAuth, async (req, res) => {
+  const meetup = await Meetup.findById(req.params.id);
+  if (!meetup) return res.status(404).json({ message: "Meetup not found" });
+
+  if (meetup.host.toString() === req.userId) {
+    return res.status(400).json({ message: "Hosts can't leave their own meetup" });
+  }
+
+  meetup.attendees = meetup.attendees.filter((a) => a.toString() !== req.userId);
+  await meetup.save();
+
+  const populated = await meetup.populate(["host", "attendees"]);
+  res.json({ meetup: serializeMeetup(populated, req.userId) });
+});
+
 // Attendees still waiting to be rated by the current user for this meetup.
 router.get("/:id/rating-queue", requireAuth, async (req, res) => {
   const meetup = await Meetup.findById(req.params.id).populate("attendees");
