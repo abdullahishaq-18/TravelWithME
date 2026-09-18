@@ -73,8 +73,8 @@ export default function SignUp() {
           <span style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.12)" }} />OR<span style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.12)" }} />
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <button type="button" className="btn btn-outline" style={{ width: "100%" }}>Continue with Apple</button>
-          <button type="button" className="btn btn-outline" style={{ width: "100%" }}>Continue with Google</button>
+          <button type="button" className="btn btn-outline" disabled title="Coming soon" style={{ width: "100%" }}>Continue with Apple</button>
+          <button type="button" className="btn btn-outline" disabled title="Coming soon" style={{ width: "100%" }}>Continue with Google</button>
         </div>
         <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 14, paddingTop: 24 }}>
           <div style={{ display: "flex", gap: 10, alignItems: "flex-start", borderLeft: "2px solid var(--green)", paddingLeft: 12 }}>

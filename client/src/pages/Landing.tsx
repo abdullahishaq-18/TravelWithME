@@ -51,11 +51,11 @@ export default function Landing() {
           className="mono-label"
           style={{ display: "flex", gap: 34, color: "var(--text-dim)" }}
         >
-          <div style={{ color: "#fff", borderBottom: "2px solid var(--orange)", paddingBottom: 4 }}>Home</div>
-          <div>How trust works</div>
-          <div>Meetups</div>
-          <div>Safety</div>
-          <div>Support</div>
+          <Link to="/" style={{ color: "#fff", borderBottom: "2px solid var(--orange)", paddingBottom: 4 }}>Home</Link>
+          <a href="#how-trust-works" style={{ color: "var(--text-dim)" }}>How trust works</a>
+          <a href="#meetups-preview" style={{ color: "var(--text-dim)" }}>Meetups</a>
+          <span title="Coming soon" style={{ color: "var(--text-faintest)", cursor: "default" }}>Safety</span>
+          <span title="Coming soon" style={{ color: "var(--text-faintest)", cursor: "default" }}>Support</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
           <Link to="/login" className="mono-label" style={{ color: "var(--text-dim)" }}>Log in</Link>
@@ -99,7 +99,7 @@ export default function Landing() {
         </div>
       </div>
 
-      <div style={{ padding: "76px 44px", background: "var(--panel)" }}>
+      <div id="how-trust-works" style={{ padding: "76px 44px", background: "var(--panel)" }}>
         <div className="mono-label" style={{ textAlign: "center" }}>Built for people travelling solo</div>
         <div className="heading" style={{ textAlign: "center", fontSize: 42, marginTop: 14 }}>How trust works</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 28, marginTop: 52 }}>
@@ -115,7 +115,7 @@ export default function Landing() {
         </div>
       </div>
 
-      <div style={{ padding: "34px 44px 76px" }}>
+      <div id="meetups-preview" style={{ padding: "34px 44px 76px" }}>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", borderTop: "1px solid var(--border)", paddingTop: 34, flexWrap: "wrap", gap: 12 }}>
           <div className="heading" style={{ fontSize: 30, letterSpacing: "0.08em" }}>Live near Lisbon</div>
           <Link to="/signup" className="mono-label" style={{ color: "var(--orange)" }}>Open the feed →</Link>
@@ -144,7 +144,11 @@ export default function Landing() {
       </div>
       <div className="mono-label" style={{ display: "flex", justifyContent: "space-between", padding: "24px 44px", borderTop: "1px solid var(--border)", flexWrap: "wrap", gap: 12 }}>
         <div>TravelWithMe © 2026</div>
-        <div style={{ display: "flex", gap: 26 }}><span>Safety centre</span><span>Report a user</span><span>Privacy</span></div>
+        <div style={{ display: "flex", gap: 26 }}>
+          <span title="Coming soon" style={{ color: "var(--text-faintest)", cursor: "default" }}>Safety centre</span>
+          <span title="Coming soon" style={{ color: "var(--text-faintest)", cursor: "default" }}>Report a user</span>
+          <span title="Coming soon" style={{ color: "var(--text-faintest)", cursor: "default" }}>Privacy</span>
+        </div>
       </div>
     </div>
   );

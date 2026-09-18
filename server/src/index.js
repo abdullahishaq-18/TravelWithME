@@ -18,7 +18,7 @@ const createMessagesRouter = require("./routes/messages");
 
 const app = express();
 const server = http.createServer(app);
-const clientOrigin = process.env.CLIENT_ORIGIN || "http://localhost:5173";
+const clientOrigin = process.env.CLIENT_URL || "http://localhost:5173";
 const io = new Server(server, { cors: { origin: clientOrigin } });
 
 app.use(cors({ origin: clientOrigin }));

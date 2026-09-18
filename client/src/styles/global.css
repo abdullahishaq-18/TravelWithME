@@ -111,7 +111,7 @@ textarea {
   background: var(--orange-hover);
 }
 
-.btn-primary:disabled {
+.btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

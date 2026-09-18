@@ -53,12 +53,16 @@ Edit `.env`:
 PORT=5000
 MONGO_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/travelwithme?retryWrites=true&w=majority
 JWT_SECRET=<a long random string>
-CLIENT_ORIGIN=http://localhost:5173
+CLIENT_URL=http://localhost:5173
 ```
 
 `MONGO_URI` can point at a local MongoDB instance or a MongoDB Atlas cluster (Atlas: create a free
 M0 cluster, a database user, allow your IP under Network Access, then copy the connection string
 from **Connect → Drivers**).
+
+**In production**, `CLIENT_URL` must be set to the deployed frontend's actual origin (e.g.
+`https://travelwithme.example.com`) on whatever platform hosts the server — not left at the
+`http://localhost:5173` default, or CORS will block every request from the real frontend.
 
 Seed demo data (4 travelers, 10 posts, 5 meetups, all with real photos from `client/public/images`):
 

@@ -1,6 +1,14 @@
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+// Normalizes VITE_API_URL to always end in exactly one "/api" segment, whether it was set to
+// the bare backend origin (e.g. "https://api.example.com") or already includes "/api" — a 404 on
+// every request (e.g. signup) is what you get if a deployment's env var is missing that suffix.
+function resolveApiBaseUrl(): string {
+  const raw = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/+$/, "");
+  return raw.endsWith("/api") ? raw : `${raw}/api`;
+}
+
+const API_BASE_URL = resolveApiBaseUrl();
 
 export const api = axios.create({ baseURL: API_BASE_URL });
 
